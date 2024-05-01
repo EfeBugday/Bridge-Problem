@@ -1,0 +1,116 @@
+class Semaphore {
+    private int s;
+
+    public Semaphore(int s) {
+        this.s = s;
+    }
+
+    public synchronized void P() throws InterruptedException {
+        while (s <= 0) {
+            wait();
+        }
+        s--;
+    }
+
+    public synchronized void V() {
+        s++;
+        notify();
+    }
+}
+
+class Bridge {
+	
+    private Semaphore bridgeSemaphore;
+    private Semaphore directionSemaphore;
+    private int vehiclesOnBridge;
+    private boolean isDirectionEastToWest; 
+    private int vehicleID;
+
+    public Bridge() {
+    	
+        bridgeSemaphore = new Semaphore(1);
+        directionSemaphore = new Semaphore(1);
+        vehiclesOnBridge = 0;
+        isDirectionEastToWest = true; 
+        vehicleID = 1;
+    }
+
+    public void enterBridgeFromEast() throws InterruptedException {
+    	
+        directionSemaphore.P();
+        if (!isDirectionEastToWest) {
+            directionSemaphore.V();
+            Thread.sleep(100);
+            enterBridgeFromEast();
+            return;
+        }
+        directionSemaphore.V();
+
+        bridgeSemaphore.P();
+        vehiclesOnBridge++;
+        int currentVehicleID = vehicleID++;
+        System.out.println("Vehicle " + currentVehicleID + " from East is crossing the bridge. Vehicles on Bridge: " + vehiclesOnBridge);
+
+        if (vehiclesOnBridge == 5) {
+            changeDirection();
+        }
+        bridgeSemaphore.V();
+    }
+
+    public void enterBridgeFromWest() throws InterruptedException {
+    	
+        directionSemaphore.P();
+        if (isDirectionEastToWest) {
+            directionSemaphore.V();
+            Thread.sleep(100);
+            enterBridgeFromWest();
+            return;
+        }
+        directionSemaphore.V();
+
+        bridgeSemaphore.P();
+        vehiclesOnBridge++;
+        int currentVehicleID = vehicleID++;
+        System.out.println("Vehicle " + currentVehicleID + " from West is crossing the bridge. Vehicles on Bridge: " + vehiclesOnBridge);
+
+        if (vehiclesOnBridge == 5) {
+            changeDirection();
+        }
+        bridgeSemaphore.V();
+    }
+
+    private void changeDirection() {
+        isDirectionEastToWest = !isDirectionEastToWest; // Change direction
+        vehiclesOnBridge = 0; // Reset count
+    }
+}
+
+class Bridge_Problem {
+    public static void main(String[] args) {
+        Bridge bridge = new Bridge();
+
+        for (int i = 0; i < 10; i++) {
+            Runnable vehicleFromEast = () -> {
+                try {
+                    bridge.enterBridgeFromEast();
+                    Thread.sleep(1000); // Simulate crossing time
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            };
+
+            Runnable vehicleFromWest = () -> {
+                try {
+                    bridge.enterBridgeFromWest();
+                    Thread.sleep(1000); // Simulate crossing time
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            };
+
+            
+            new Thread(vehicleFromEast).start();
+            new Thread(vehicleFromWest).start();
+        }
+    }
+}
