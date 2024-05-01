@@ -1,0 +1,1 @@
+Let's imagine a bridge built over a river, but only allowing vehicle passage in one direction at any given time (that is, two vehicles cannot pass each other side by side across the bridge at the same time). The length of the bridge is 5 vehicles long.
